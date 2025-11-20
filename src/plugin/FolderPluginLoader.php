@@ -24,44 +24,37 @@ declare(strict_types=1);
 namespace pocketmine\plugin;
 
 use pocketmine\thread\ThreadSafeClassLoader;
-use function is_file;
-use function str_ends_with;
 
 /**
  * Handles different types of plugins
  */
-class PharPluginLoader implements PluginLoader{
+class FolderPluginLoader implements PluginLoader{
 	public function __construct(
 		private ThreadSafeClassLoader $loader
 	){}
 
-	public function canLoadPlugin(string $path) : bool{
-		return is_file($path) && str_ends_with($path, ".phar");
+	public function canLoadPlugin(string $path): bool {
+		return is_dir($path) && file_exists($path . "/plugin.yml") && file_exists($path . "/src/");
 	}
 
-	/**
-	 * Loads the plugin contained in $file
-	 */
-	public function loadPlugin(string $file) : void{
+	public function loadPlugin(string $file): void {
 		$description = $this->getPluginDescription($file);
-		if($description !== null){
+		if($description !== null) {
 			$this->loader->addPath($description->getSrcNamespacePrefix(), "$file/src");
 		}
 	}
 
-	/**
-	 * Gets the PluginDescription from the file
-	 */
-	public function getPluginDescription(string $file) : ?PluginDescription{
-		$phar = new \Phar($file);
-		if(isset($phar["plugin.yml"])){
-			return new PluginDescription($phar["plugin.yml"]->getContent());
+	public function getPluginDescription(string $file) : ?PluginDescription {
+		if(is_dir($file) && file_exists($file . "/plugin.yml")) {
+			$yaml = @file_get_contents($file . "/plugin.yml");
+			if($yaml !== "") {
+				return new PluginDescription($yaml);
+			}
 		}
-
 		return null;
 	}
 
-	public function getAccessProtocol() : string{
-		return "phar://";
+	public function getAccessProtocol() : string {
+		return "";
 	}
 }

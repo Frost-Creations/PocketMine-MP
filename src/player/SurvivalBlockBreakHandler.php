@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace pocketmine\player;
 
+use FrostNetwork\SkyblockCore\FrostPlayer;
 use pocketmine\block\Block;
 use pocketmine\entity\animation\ArmSwingAnimation;
 use pocketmine\entity\effect\VanillaEffects;
@@ -87,6 +88,11 @@ final class SurvivalBlockBreakHandler{
 			if($miningFatigue !== null){
 				$miningFatigueLevel = $miningFatigue->getEffectLevel();
 				$progressPerTick *= 0.21 ** $miningFatigueLevel;
+			}
+
+			if ($this->player instanceof FrostPlayer) {
+				$miningSpeed = $this->player->getSession()->getMiningSpeed();
+				$progressPerTick *= $miningSpeed;
 			}
 
 			return $progressPerTick;

@@ -123,23 +123,6 @@ class Armor extends Durable{
 		return $epf;
 	}
 
-	protected function getUnbreakingDamageReduction(int $amount) : int{
-		if(($unbreakingLevel = $this->getEnchantmentLevel(VanillaEnchantments::UNBREAKING())) > 0){
-			$negated = 0;
-
-			$chance = 1 / ($unbreakingLevel + 1);
-			for($i = 0; $i < $amount; ++$i){
-				if(mt_rand(1, 100) > 60 && Utils::getRandomFloat() > $chance){ //unbreaking only applies to armor 40% of the time at best
-					$negated++;
-				}
-			}
-
-			return $negated;
-		}
-
-		return 0;
-	}
-
 	public function onClickAir(Player $player, Vector3 $directionVector, array &$returnedItems) : ItemUseResult{
 		$existing = $player->getArmorInventory()->getItem($this->getArmorSlot());
 		$thisCopy = clone $this;
