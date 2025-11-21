@@ -61,11 +61,11 @@ enum ToolTier{
 	 */
 	private function getMetadata() : array{
 		return match($this){
-			self::WOOD => self::meta(1, 60, 5, 2, 15),
-			self::GOLD => self::meta(2, 33, 5, 12, 22),
-			self::STONE => self::meta(3, 132, 6, 4, 5),
-			self::IRON => self::meta(4, 251, 7, 6, 14),
-			self::DIAMOND => self::meta(5, 1562, 8, 8, 10),
+			self::WOOD => self::meta(1, 60, 10, 2, 15),
+			self::GOLD => self::meta(2, 33, 15, 12, 22),
+			self::STONE => self::meta(3, 132, 20, 4, 5),
+			self::IRON => self::meta(4, 251, 25, 6, 14),
+			self::DIAMOND => self::meta(5, 1562, 30, 8, 10),
 			self::NETHERITE => self::meta(6, 2032, 9, 9, 15)
 		};
 	}

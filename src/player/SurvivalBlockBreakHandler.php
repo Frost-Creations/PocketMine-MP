@@ -72,6 +72,7 @@ final class SurvivalBlockBreakHandler{
 		if(!$this->player->isOnGround() && !$this->player->isFlying()){
 			$breakTimePerTick *= 5;
 		}
+		
 		if($this->player->isUnderwater() && !$this->player->getArmorInventory()->getHelmet()->hasEnchantment(VanillaEnchantments::AQUA_AFFINITY())){
 			$breakTimePerTick *= 5;
 		}

@@ -29,7 +29,6 @@ use pocketmine\data\bedrock\block\BlockStateDeserializeException;
 use pocketmine\data\bedrock\block\BlockStateDeserializer;
 use pocketmine\data\bedrock\block\convert\UnsupportedBlockStateException;
 use pocketmine\data\bedrock\item\SavedItemData as Data;
-use pocketmine\item\Durable;
 use pocketmine\item\Item;
 use pocketmine\nbt\NbtException;
 use function min;
@@ -109,11 +108,6 @@ final class ItemDeserializer{
 			}catch(NbtException $e){
 				throw new ItemTypeDeserializeException("Invalid item saved NBT: " . $e->getMessage(), 0, $e);
 			}
-		}
-
-		//TODO: this hack is necessary to get legacy tools working - we need a better way to handle this kind of stuff
-		if($itemStack instanceof Durable && $itemStack->getDamage() === 0 && ($damage = $data->getTypeData()->getMeta()) > 0){
-			$itemStack->setDamage(min($damage, $itemStack->getMaxDurability()));
 		}
 
 		//TODO: canDestroy, canPlaceOn, wasPickedUp are currently unused

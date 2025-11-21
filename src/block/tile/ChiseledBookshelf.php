@@ -122,7 +122,6 @@ class ChiseledBookshelf extends Tile implements Container{
 			if($item->isNull()){
 				$items[$slot] = CompoundTag::create()
 					->setByte(SavedItemStackData::TAG_COUNT, 0)
-					->setShort(SavedItemData::TAG_DAMAGE, 0)
 					->setString(SavedItemData::TAG_NAME, "")
 					->setByte(SavedItemStackData::TAG_WAS_PICKED_UP, 0);
 			}else{

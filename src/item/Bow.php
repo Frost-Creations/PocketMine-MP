@@ -118,7 +118,7 @@ class Bow extends Tool implements Releasable{
 			if(!$infinity){ //TODO: tipped arrows are still consumed when Infinity is applied
 				$inventory?->removeItem($arrow);
 			}
-			$this->applyDamage(1);
+			
 		}
 
 		return ItemUseResult::SUCCESS;

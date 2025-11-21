@@ -535,7 +535,6 @@ abstract class Living extends Entity{
 	}
 
 	private function damageItem(Durable $item, int $durabilityRemoved) : void{
-		$item->applyDamage($durabilityRemoved);
 		if($item->isBroken()){
 			$this->broadcastSound(new ItemBreakSound());
 		}

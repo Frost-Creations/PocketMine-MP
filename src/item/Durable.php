@@ -23,12 +23,27 @@ declare(strict_types=1);
 
 namespace pocketmine\item;
 
-use pocketmine\item\enchantment\VanillaEnchantments;
 use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\utils\Utils;
-use function min;
 
 abstract class Durable extends Item{
+	protected int $damage = 0;
+	private bool $unbreakable = false;
+
+	/**
+	 * Returns whether this item will take damage when used.
+	 */
+	public function isUnbreakable() : bool{
+		return $this->unbreakable;
+	}
+
+	/**
+	 * Sets whether the item will take damage when used.
+	 *
+	 * @return $this
+	 */
+	public function setUnbreakable(bool $value = true) : self{
+		return $this;
+	}
 
 	/**
 	 * Applies damage to the item.
@@ -40,11 +55,22 @@ abstract class Durable extends Item{
 	}
 
 	public function getDamage() : int{
-		return 0;
+		return $this->damage;
 	}
 
 	public function setDamage(int $damage) : Item{
 		return $this;
+	}
+
+	protected function getUnbreakingDamageReduction(int $amount) : int{
+		return 0;
+	}
+
+	/**
+	 * Called when the item's damage exceeds its maximum durability.
+	 */
+	protected function onBroken() : void{
+		$this->setDamage(0); //the stack size may be greater than 1 if overstacked by a plugin
 	}
 
 	/**
@@ -61,7 +87,7 @@ abstract class Durable extends Item{
 
 	protected function deserializeCompoundTag(CompoundTag $tag) : void{
 		parent::deserializeCompoundTag($tag);
-		}
+	}
 
 	protected function serializeCompoundTag(CompoundTag $tag) : void{
 		parent::serializeCompoundTag($tag);

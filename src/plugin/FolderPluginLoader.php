@@ -24,6 +24,9 @@ declare(strict_types=1);
 namespace pocketmine\plugin;
 
 use pocketmine\thread\ThreadSafeClassLoader;
+use function file_exists;
+use function file_get_contents;
+use function is_dir;
 
 /**
  * Handles different types of plugins
@@ -33,11 +36,11 @@ class FolderPluginLoader implements PluginLoader{
 		private ThreadSafeClassLoader $loader
 	){}
 
-	public function canLoadPlugin(string $path): bool {
+	public function canLoadPlugin(string $path) : bool {
 		return is_dir($path) && file_exists($path . "/plugin.yml") && file_exists($path . "/src/");
 	}
 
-	public function loadPlugin(string $file): void {
+	public function loadPlugin(string $file) : void {
 		$description = $this->getPluginDescription($file);
 		if($description !== null) {
 			$this->loader->addPath($description->getSrcNamespacePrefix(), "$file/src");

@@ -47,9 +47,6 @@ abstract class StringToTParser{
 	/** @phpstan-param \Closure(string $input) : T $callback */
 	public function register(string $alias, \Closure $callback) : void{
 		$key = $this->reprocess($alias);
-		if(isset($this->callbackMap[$key])){
-			throw new \InvalidArgumentException("Alias \"$key\" is already registered");
-		}
 		$this->callbackMap[$key] = $callback;
 	}
 

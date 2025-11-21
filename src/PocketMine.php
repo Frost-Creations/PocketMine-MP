@@ -17,6 +17,27 @@
  * @link http://www.pocketmine.net/
  *
  *
+ */
+
+declare(strict_types=1);
+
+/*
+ *
+ *  ____            _        _   __  __ _                  __  __ ____
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
+ *
+ *
 */
 
 namespace pocketmine {
@@ -35,21 +56,41 @@ namespace pocketmine {
 	use pocketmine\utils\Utils;
 	use pocketmine\wizard\SetupWizard;
 	use Symfony\Component\Filesystem\Path;
+	use function count;
 	use function defined;
+	use function dirname;
+	use function error_reporting;
+	use function explode;
 	use function extension_loaded;
+	use function file_exists;
 	use function function_exists;
 	use function getcwd;
+	use function getenv;
 	use function getopt;
+	use function ini_get;
+	use function ini_set;
+	use function is_array;
 	use function is_dir;
-	use function mkdir;
-	use function phpversion;
-	use function preg_match;
-	use function preg_quote;
-	use function printf;
-	use function realpath;
-	use function version_compare;
-	use const DIRECTORY_SEPARATOR;
-	use const PHP_EOL;
+use function is_file;
+use function is_string;
+use function mkdir;
+use function opcache_get_status;
+use function php_ini_loaded_file;
+use function php_sapi_name;
+use function phpversion;
+use function preg_match;
+use function preg_quote;
+use function printf;
+use function realpath;
+use function usleep;
+use function version_compare;
+use function xdebug_info;
+use const DIRECTORY_SEPARATOR;
+use const PHP_BINARY;
+use const PHP_EOL;
+use const PHP_INT_SIZE;
+use const PHP_VERSION;
+use const ZEND_DEBUG_BUILD;
 
 	require_once __DIR__ . '/VersionInfo.php';
 
