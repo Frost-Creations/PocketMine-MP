@@ -60,6 +60,6 @@ final class SessionStartPacketHandler extends PacketHandler{
 	}
 
 	protected function isCompatibleProtocol(int $protocolVersion) : bool{
-		return $protocolVersion === ProtocolInfo::CURRENT_PROTOCOL;
+		return $protocolVersion === ProtocolInfo::CURRENT_PROTOCOL || (ProtocolInfo::CURRENT_PROTOCOL === 860 && $protocolVersion === 859);
 	}
 }
