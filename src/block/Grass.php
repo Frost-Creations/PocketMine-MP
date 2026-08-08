@@ -94,14 +94,14 @@ class Grass extends Opaque{
 		}
 		if($face !== Facing::DOWN){
 			if($item instanceof Hoe){
-				
+				$item->applyDamage(1);
 				$newBlock = VanillaBlocks::FARMLAND();
 				$world->addSound($this->position->add(0.5, 0.5, 0.5), new ItemUseOnBlockSound($newBlock));
 				$world->setBlock($this->position, $newBlock);
 
 				return true;
 			}elseif($item instanceof Shovel){
-				
+				$item->applyDamage(1);
 				$newBlock = VanillaBlocks::GRASS_PATH();
 				$world->addSound($this->position->add(0.5, 0.5, 0.5), new ItemUseOnBlockSound($newBlock));
 				$world->setBlock($this->position, $newBlock);

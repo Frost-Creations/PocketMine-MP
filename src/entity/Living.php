@@ -62,6 +62,7 @@ use pocketmine\network\mcpe\protocol\types\entity\EntityMetadataProperties;
 use pocketmine\player\Player;
 use pocketmine\timings\Timings;
 use pocketmine\utils\Binary;
+use pocketmine\utils\Limits;
 use pocketmine\utils\Utils;
 use pocketmine\world\sound\BurpSound;
 use pocketmine\world\sound\EntityLandSound;
@@ -132,6 +133,7 @@ abstract class Living extends Entity{
 	protected bool $sneaking = false;
 	protected bool $gliding = false;
 	protected bool $swimming = false;
+	protected bool $switching = false;
 
 	private ?int $frostWalkerLevel = null;
 
@@ -189,12 +191,14 @@ abstract class Living extends Entity{
 					continue;
 				}
 
+				$duration = $e->getInt(self::TAG_EFFECT_DURATION);
 				$this->effectManager->add(new EffectInstance(
 					$effect,
-					$e->getInt(self::TAG_EFFECT_DURATION),
+					$duration === -1 ? Limits::INT32_MAX : $duration,
 					Binary::unsignByte($e->getByte(self::TAG_EFFECT_AMPLIFIER)),
 					$e->getByte(self::TAG_EFFECT_SHOW_PARTICLES, 1) !== 0,
-					$e->getByte(self::TAG_EFFECT_AMBIENT, 0) !== 0
+					$e->getByte(self::TAG_EFFECT_AMBIENT, 0) !== 0,
+					infinite: $duration === -1
 				));
 			}
 		}
@@ -269,6 +273,14 @@ abstract class Living extends Entity{
 		}
 	}
 
+	public function setSwitching(bool $value = true) : void{
+		$this->switching = $value;
+	}
+
+	public function isSwitchingEnabled() : bool{
+		return $this->switching;
+	}
+
 	public function isGliding() : bool{
 		return $this->gliding;
 	}
@@ -321,7 +333,7 @@ abstract class Living extends Entity{
 				$effects[] = CompoundTag::create()
 					->setByte(self::TAG_EFFECT_ID, EffectIdMap::getInstance()->toId($effect->getType()))
 					->setByte(self::TAG_EFFECT_AMPLIFIER, Binary::signByte($effect->getAmplifier()))
-					->setInt(self::TAG_EFFECT_DURATION, $effect->getDuration())
+					->setInt(self::TAG_EFFECT_DURATION, $effect->isInfinite() ? -1 : $effect->getDuration())
 					->setByte(self::TAG_EFFECT_AMBIENT, $effect->isAmbient() ? 1 : 0)
 					->setByte(self::TAG_EFFECT_SHOW_PARTICLES, $effect->isVisible() ? 1 : 0);
 			}
@@ -535,6 +547,7 @@ abstract class Living extends Entity{
 	}
 
 	private function damageItem(Durable $item, int $durabilityRemoved) : void{
+		$item->applyDamage($durabilityRemoved);
 		if($item->isBroken()){
 			$this->broadcastSound(new ItemBreakSound());
 		}
@@ -574,9 +587,7 @@ abstract class Living extends Entity{
 			return;
 		}
 
-		if($this->attackTime <= 0){
-			//this logic only applies if the entity was cold attacked
-
+		if ($this->isSwitchingEnabled()){
 			$this->attackTime = $source->getAttackCooldown();
 
 			if($source instanceof EntityDamageByChildEntityEvent){
@@ -595,12 +606,38 @@ abstract class Living extends Entity{
 			}
 
 			if($this->isAlive()){
+				$this->applyPostDamageEffects($source);
 				$this->doHitAnimation();
 			}
-		}
+		} else {
+			if($this->attackTime <= 0){
+				//this logic only applies if the entity was cold attacked
 
-		if($this->isAlive()){
-			$this->applyPostDamageEffects($source);
+				$this->attackTime = $source->getAttackCooldown();
+
+				if($source instanceof EntityDamageByChildEntityEvent){
+					$e = $source->getChild();
+					if($e !== null){
+						$motion = $e->getMotion();
+						$this->knockBack($motion->x, $motion->z, $source->getKnockBack(), $source->getVerticalKnockBackLimit());
+					}
+				}elseif($source instanceof EntityDamageByEntityEvent){
+					$e = $source->getDamager();
+					if($e !== null){
+						$deltaX = $this->location->x - $e->location->x;
+						$deltaZ = $this->location->z - $e->location->z;
+						$this->knockBack($deltaX, $deltaZ, $source->getKnockBack(), $source->getVerticalKnockBackLimit());
+					}
+				}
+
+				if($this->isAlive()){
+					$this->doHitAnimation();
+				}
+			}
+
+			if($this->isAlive()){
+				$this->applyPostDamageEffects($source);
+			}
 		}
 	}
 

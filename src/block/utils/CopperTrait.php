@@ -79,7 +79,7 @@ trait CopperTrait{
 				$this->position->getWorld()->setBlock($this->position, $this);
 				//TODO: white particles are supposed to appear when removing wax
 				$this->position->getWorld()->addSound($this->position, new CopperWaxRemoveSound());
-				
+				$item->applyDamage(1);
 				return true;
 			}
 
@@ -89,7 +89,7 @@ trait CopperTrait{
 				$this->position->getWorld()->setBlock($this->position, $this);
 				//TODO: turquoise particles are supposed to appear when removing oxidation
 				$this->position->getWorld()->addSound($this->position, new ScrapeSound());
-				
+				$item->applyDamage(1);
 				return true;
 			}
 		}

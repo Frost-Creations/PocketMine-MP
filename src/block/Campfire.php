@@ -191,13 +191,13 @@ class Campfire extends Transparent implements Lightable, HorizontalFacing{
 				return true;
 			}elseif($item->getTypeId() === ItemTypeIds::FLINT_AND_STEEL || $item->hasEnchantment(VanillaEnchantments::FIRE_ASPECT())){
 				if($item instanceof Durable){
-					
+					$item->applyDamage(1);
 				}
 				$this->ignite();
 				return true;
 			}
 		}elseif($item instanceof Shovel){
-			
+			$item->applyDamage(1);
 			$this->extinguish();
 			return true;
 		}

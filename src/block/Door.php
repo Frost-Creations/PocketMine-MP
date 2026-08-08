@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace pocketmine\block;
 
+use pocketmine\block\utils\BlockSupportRegistry;
 use pocketmine\block\utils\HorizontalFacing;
 use pocketmine\block\utils\HorizontalFacingTrait;
 use pocketmine\block\utils\SupportType;
@@ -172,6 +173,6 @@ class Door extends Transparent implements HorizontalFacing{
 	}
 
 	private function canBeSupportedAt(Block $block) : bool{
-		return $block->getAdjacentSupportType(Facing::DOWN)->hasEdgeSupport();
+		return BlockSupportRegistry::getInstance()->isTypeSupported($this, $block);
 	}
 }

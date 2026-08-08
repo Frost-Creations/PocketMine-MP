@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace pocketmine\block;
 
 use pocketmine\block\tile\Bed as TileBed;
+use pocketmine\block\utils\BlockSupportRegistry;
 use pocketmine\block\utils\Colored;
 use pocketmine\block\utils\ColoredTrait;
 use pocketmine\block\utils\DyeColor;
@@ -124,7 +125,7 @@ class Bed extends Transparent implements Colored, HorizontalFacing{
 			$other = $this->getOtherHalf();
 			$playerPos = $player->getPosition();
 			if($other === null){
-				$player->sendMessage(TextFormat::GRAY . "This bed is incomplete");
+				$player->sendMessage(KnownTranslationFactory::pocketmine_block_bed_incomplete()->prefix(TextFormat::GRAY));
 
 				return true;
 			}elseif($playerPos->distanceSquared($this->position) > 4 && $playerPos->distanceSquared($other->position) > 4){
@@ -205,7 +206,7 @@ class Bed extends Transparent implements Colored, HorizontalFacing{
 	}
 
 	private function canBeSupportedAt(Block $block) : bool{
-		return $block->getAdjacentSupportType(Facing::DOWN) !== SupportType::NONE;
+		return BlockSupportRegistry::getInstance()->isTypeSupported($this, $block);
 	}
 
 	public function getMaxStackSize() : int{ return 1; }

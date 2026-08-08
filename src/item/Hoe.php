@@ -34,11 +34,13 @@ class Hoe extends TieredTool{
 	}
 
 	public function onAttackEntity(Entity $victim, array &$returnedItems) : bool{
-		return false;
+		return $this->applyDamage(1);
 	}
 
 	public function onDestroyBlock(Block $block, array &$returnedItems) : bool{
-		
+		if(!$block->getBreakInfo()->breaksInstantly()){
+			return $this->applyDamage(1);
+		}
 		return false;
 	}
 }

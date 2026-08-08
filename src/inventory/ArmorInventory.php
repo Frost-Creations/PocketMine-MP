@@ -28,6 +28,7 @@ use pocketmine\entity\Living;
 use pocketmine\inventory\transaction\action\validator\CallbackSlotValidator;
 use pocketmine\inventory\transaction\TransactionValidationException;
 use pocketmine\item\Armor;
+use FrostNetwork\SkyblockCore\items\FrostArmor;
 use pocketmine\item\Item;
 use pocketmine\item\ItemBlock;
 
@@ -82,7 +83,7 @@ class ArmorInventory extends SimpleInventory{
 	}
 
 	private static function validate(Inventory $inventory, Item $item, int $slot) : ?TransactionValidationException{
-		if($item instanceof Armor){
+		if($item instanceof Armor || $item instanceof FrostArmor){
 			if($item->getArmorSlot() !== $slot){
 				return new TransactionValidationException("Armor item is in wrong slot");
 			}

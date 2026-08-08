@@ -26,10 +26,10 @@ namespace pocketmine\block;
 use pocketmine\block\utils\Ageable;
 use pocketmine\block\utils\AgeableTrait;
 use pocketmine\block\utils\BlockEventHelper;
+use pocketmine\block\utils\BlockSupportRegistry;
 use pocketmine\block\utils\FortuneDropHelper;
 use pocketmine\block\utils\StaticSupportTrait;
 use pocketmine\item\Item;
-use pocketmine\math\Facing;
 use function mt_rand;
 
 class NetherWartPlant extends Flowable implements Ageable{
@@ -39,7 +39,7 @@ class NetherWartPlant extends Flowable implements Ageable{
 	public const MAX_AGE = 3;
 
 	private function canBeSupportedAt(Block $block) : bool{
-		return $block->getSide(Facing::DOWN)->getTypeId() === BlockTypeIds::SOUL_SAND;
+		return BlockSupportRegistry::getInstance()->isTypeSupported($this, $block);
 	}
 
 	public function ticksRandomly() : bool{

@@ -85,7 +85,7 @@ class TNT extends Opaque{
 		}
 		if($item instanceof FlintSteel || $item->hasEnchantment(VanillaEnchantments::FIRE_ASPECT())){
 			if($item instanceof Durable){
-				
+				$item->applyDamage(1);
 			}
 			$this->ignite();
 			return true;

@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace pocketmine\block;
 
+use pocketmine\block\utils\BlockSupportRegistry;
 use pocketmine\block\utils\HorizontalFacing;
 use pocketmine\block\utils\HorizontalFacingTrait;
 use pocketmine\block\utils\SupportType;
@@ -83,6 +84,6 @@ class Ladder extends Transparent implements HorizontalFacing{
 	}
 
 	private function canBeSupportedAt(Block $block, int $face) : bool{
-		return $block->getAdjacentSupportType($face) === SupportType::FULL;
+		return BlockSupportRegistry::getInstance()->isTypeSupported($this, $block, $face);
 	}
 }

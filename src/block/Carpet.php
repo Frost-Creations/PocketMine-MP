@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace pocketmine\block;
 
+use pocketmine\block\utils\BlockSupportRegistry;
 use pocketmine\block\utils\Colored;
 use pocketmine\block\utils\ColoredTrait;
 use pocketmine\block\utils\StaticSupportTrait;
@@ -42,7 +43,7 @@ class Carpet extends Flowable implements Colored{
 	}
 
 	private function canBeSupportedAt(Block $block) : bool{
-		return $block->getSide(Facing::DOWN)->getTypeId() !== BlockTypeIds::AIR;
+		return BlockSupportRegistry::getInstance()->isTypeSupported($this, $block);
 	}
 
 	public function getFlameEncouragement() : int{

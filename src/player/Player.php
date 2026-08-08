@@ -34,7 +34,9 @@ use pocketmine\crafting\CraftingGrid;
 use pocketmine\data\java\GameModeIdMap;
 use pocketmine\entity\animation\Animation;
 use pocketmine\entity\animation\ArmSwingAnimation;
+use pocketmine\entity\animation\ConsumingItemAnimation;
 use pocketmine\entity\animation\CriticalHitAnimation;
+use pocketmine\entity\animation\MagicHitAnimation;
 use pocketmine\entity\Attribute;
 use pocketmine\entity\effect\VanillaEffects;
 use pocketmine\entity\Entity;
@@ -290,6 +292,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 	protected bool $allowFlight = false;
 	protected bool $blockCollision = true;
 	protected bool $flying = false;
+	protected bool $sneakPressed = false;
 
 	protected float $flightSpeedMultiplier = self::DEFAULT_FLIGHT_SPEED_MULTIPLIER;
 
@@ -329,7 +332,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 		$this->locale = $this->playerInfo->getLocale();
 
 		$this->uuid = $this->playerInfo->getUuid();
-		$this->xuid = $this->playerInfo instanceof XboxLivePlayerInfo ? $this->playerInfo->getXuid() : "";
+		$this->xuid = $this->playerInfo instanceof XboxLivePlayerInfo ? $this->playerInfo->getXuid() : $session->getXuid();
 
 		$this->creativeInventory = CreativeInventory::getInstance();
 
@@ -610,7 +613,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 			return;
 		}
 		unset($this->hiddenPlayers[$player->getUniqueId()->getBytes()]);
-		if($player->isOnline()){
+		if($player->isConnected()){
 			$player->spawnTo($this);
 		}
 	}
@@ -1280,6 +1283,18 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 		return $this->gamemode === GameMode::SPECTATOR;
 	}
 
+	public function setSneakPressed(bool $sneakPressed) : void{
+		$this->sneakPressed = $sneakPressed;
+	}
+
+	/**
+	 * Returns whether the player is pressing the sneak key.
+	 * The player may still be sneaking even if this is false due to gameplay mechanics (e.g. releasing sneak while in a 1.5 block high space).
+	 */
+	public function isSneakPressed() : bool{
+		return $this->sneakPressed;
+	}
+
 	/**
 	 * TODO: make this a dynamic ability instead of being hardcoded
 	 */
@@ -1539,6 +1554,10 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 			if($this->blockBreakHandler !== null && !$this->blockBreakHandler->update()){
 				$this->blockBreakHandler = null;
 			}
+
+			if($this->isUsingItem() && $this->getItemUseDuration() % 4 === 0 && ($item = $this->inventory->getItemInHand()) instanceof ConsumableItem){
+				$this->broadcastAnimation(new ConsumingItemAnimation($this, $item));
+			}
 		}
 
 		$this->timings->stopTiming();
@@ -1726,7 +1745,8 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 		if($slot instanceof ConsumableItem){
 			$oldItem = clone $slot;
 
-			$ev = new PlayerItemConsumeEvent($this, $slot);
+			$residue = $slot->getResidue();
+			$ev = new PlayerItemConsumeEvent($this, $slot, $residue->isNull() ? [] : [$residue]);
 			if($this->hasItemCooldown($slot)){
 				$ev->cancel();
 			}
@@ -1740,7 +1760,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 			$this->resetItemCooldown($oldItem);
 
 			$slot->pop();
-			$this->returnItemsFromAction($oldItem, $slot, [$slot->getResidue()]);
+			$this->returnItemsFromAction($oldItem, $slot, $ev->getResidue());
 
 			return true;
 		}
@@ -1800,7 +1820,9 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 
 	public function pickEntity(int $entityId) : bool{
 		$entity = $this->getWorld()->getEntity($entityId);
-		if($entity === null){
+		//TODO: HACK! We really shouldn't be keeping disconnected players (and generally flagged-for-despawn entities)
+		//in the world's entity table, but changing that is too risky for a hotfix. This workaround will do for now.
+		if($entity === null || $entity->isFlaggedForDespawn()){
 			return true;
 		}
 
@@ -2000,6 +2022,9 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 		if($ev->getModifier(EntityDamageEvent::MODIFIER_CRITICAL) > 0 && $entity instanceof Living){
 			$entity->broadcastAnimation(new CriticalHitAnimation($entity));
 		}
+		if($ev->getModifier(EntityDamageEvent::MODIFIER_WEAPON_ENCHANTMENTS) > 0 && $entity instanceof Living){
+			$entity->broadcastAnimation(new MagicHitAnimation($entity));
+		}
 
 		foreach($meleeEnchantments as $enchantment){
 			$type = $enchantment->getType();
@@ -2075,12 +2100,18 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 		return true;
 	}
 
-	public function toggleSneak(bool $sneak) : bool{
-		if($sneak === $this->sneaking){
+	public function toggleSneak(bool $sneak, bool $sneakPressed = true) : bool{
+		if($sneak === $this->sneaking && $sneakPressed === $this->sneakPressed){
 			return true;
 		}
-		$ev = new PlayerToggleSneakEvent($this, $sneak);
+		$this->setSneakPressed($sneakPressed);
+
+		$ev = new PlayerToggleSneakEvent($this, $sneak, $sneakPressed);
+		if($sneak === $this->sneaking){
+			$ev->cancel();
+		}
 		$ev->call();
+
 		if($ev->isCancelled()){
 			return false;
 		}
@@ -2266,6 +2297,14 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 		}
 
 		return true;
+	}
+
+	/**
+	 * @internal
+	 * Returns whether the server is waiting for a response for a form with the given ID.
+	 */
+	public function hasPendingForm(int $formId) : bool{
+		return isset($this->forms[$formId]);
 	}
 
 	/**
@@ -2626,7 +2665,12 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 		$properties->setGenericFlag(EntityMetadataFlags::HAS_COLLISION, $this->hasBlockCollision());
 
 		$properties->setPlayerFlag(PlayerMetadataFlags::SLEEP, $this->sleeping !== null);
-		$properties->setBlockPos(EntityMetadataProperties::PLAYER_BED_POSITION, $this->sleeping !== null ? BlockPosition::fromVector3($this->sleeping) : new BlockPosition(0, 0, 0));
+		if($this->sleeping !== null){
+			//this should only be sent when the player enters the bed, as of 1.26.??
+			//previously we were setting this to 0,0,0 if the player wasn't sleeping, but that now causes the player to
+			//teleport to that position temporarily when leaving the bed. Bugrock moment...
+			$properties->setBlockPos(EntityMetadataProperties::PLAYER_BED_POSITION, BlockPosition::fromVector3($this->sleeping));
+		}
 
 		if($this->deathPosition !== null && $this->deathPosition->world === $this->location->world){
 			$properties->setBlockPos(EntityMetadataProperties::PLAYER_DEATH_POSITION, BlockPosition::fromVector3($this->deathPosition));
@@ -2853,6 +2897,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 	use ChunkListenerNoOpTrait {
 		onChunkChanged as private;
 		onChunkUnloaded as private;
+		onBlockChanged as private;
 	}
 
 	public function onChunkChanged(int $chunkX, int $chunkZ, Chunk $chunk) : void{
@@ -2867,6 +2912,13 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 		if($this->isUsingChunk($chunkX, $chunkZ)){
 			$this->logger->debug("Detected forced unload of chunk " . $chunkX . " " . $chunkZ);
 			$this->unloadChunk($chunkX, $chunkZ);
+		}
+	}
+
+	public function onBlockChanged(Vector3 $block) : void{
+		if($this->sleeping !== null && $block->equals($this->sleeping) && !($this->getWorld()->getBlock($block) instanceof Bed)){
+			$this->logger->debug("Bed was changed or deleted, aborting sleep");
+			$this->stopSleep();
 		}
 	}
 }

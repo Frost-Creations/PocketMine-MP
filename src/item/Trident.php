@@ -49,6 +49,7 @@ class Trident extends Tool implements Releasable{
 
 		$item = $this->pop();
 		if($player->hasFiniteResources()){
+			$item->applyDamage(self::DAMAGE_ON_THROW);
 		}
 		if($item->isNull()){
 			//canStartUsingItem() will normally prevent this, but it's possible the item might've been modified between
@@ -86,11 +87,13 @@ class Trident extends Tool implements Releasable{
 	}
 
 	public function onAttackEntity(Entity $victim, array &$returnedItems) : bool{
-		return false;
+		return $this->applyDamage(1);
 	}
 
 	public function onDestroyBlock(Block $block, array &$returnedItems) : bool{
-		
+		if(!$block->getBreakInfo()->breaksInstantly()){
+			return $this->applyDamage(2);
+		}
 		return false;
 	}
 }

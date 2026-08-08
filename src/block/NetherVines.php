@@ -25,6 +25,7 @@ namespace pocketmine\block;
 
 use pocketmine\block\utils\Ageable;
 use pocketmine\block\utils\AgeableTrait;
+use pocketmine\block\utils\BlockSupportRegistry;
 use pocketmine\block\utils\FortuneDropHelper;
 use pocketmine\block\utils\StaticSupportTrait;
 use pocketmine\block\utils\SupportType;
@@ -32,7 +33,6 @@ use pocketmine\entity\Entity;
 use pocketmine\event\block\StructureGrowEvent;
 use pocketmine\item\Fertilizer;
 use pocketmine\item\Item;
-use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 use pocketmine\player\Player;
 use pocketmine\world\BlockTransaction;
@@ -65,8 +65,7 @@ class NetherVines extends Flowable implements Ageable{
 	}
 
 	private function canBeSupportedAt(Block $block) : bool{
-		$supportBlock = $block->getSide(Facing::opposite($this->growthFace));
-		return $supportBlock->getSupportType($this->growthFace)->hasCenterSupport() || $supportBlock->hasSameTypeId($this);
+		return BlockSupportRegistry::getInstance()->isTypeSupported($this, $block, $this->growthFace);
 	}
 
 	/**

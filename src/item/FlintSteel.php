@@ -38,7 +38,7 @@ class FlintSteel extends Tool{
 			$world->setBlock($blockReplace->getPosition(), VanillaBlocks::FIRE());
 			$world->addSound($blockReplace->getPosition()->add(0.5, 0.5, 0.5), new FlintSteelSound());
 
-			
+			$this->applyDamage(1);
 
 			return ItemUseResult::SUCCESS;
 		}

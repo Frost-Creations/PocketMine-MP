@@ -26,6 +26,7 @@ namespace pocketmine\block;
 use pocketmine\block\utils\Ageable;
 use pocketmine\block\utils\AgeableTrait;
 use pocketmine\block\utils\BlockEventHelper;
+use pocketmine\block\utils\BlockSupportRegistry;
 use pocketmine\block\utils\CropGrowthHelper;
 use pocketmine\block\utils\StaticSupportTrait;
 use pocketmine\event\block\StructureGrowEvent;
@@ -46,7 +47,7 @@ final class PitcherCrop extends Flowable implements Ageable{
 	public const MAX_AGE = 2;
 
 	private function canBeSupportedAt(Block $block) : bool{
-		return $block->getSide(Facing::DOWN)->getTypeId() === BlockTypeIds::FARMLAND;
+		return BlockSupportRegistry::getInstance()->isTypeSupported($this, $block);
 	}
 
 	protected function recalculateCollisionBoxes() : array{

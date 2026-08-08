@@ -867,25 +867,6 @@ class Server{
 
 			$this->logger->info($this->language->translate(KnownTranslationFactory::language_selected($this->language->getName(), $this->language->getLang())));
 
-			if(VersionInfo::IS_DEVELOPMENT_BUILD){
-				if(!$this->configGroup->getPropertyBool(Yml::SETTINGS_ENABLE_DEV_BUILDS, false)){
-					$this->logger->emergency($this->language->translate(KnownTranslationFactory::pocketmine_server_devBuild_error1(VersionInfo::NAME)));
-					$this->logger->emergency($this->language->translate(KnownTranslationFactory::pocketmine_server_devBuild_error2()));
-					$this->logger->emergency($this->language->translate(KnownTranslationFactory::pocketmine_server_devBuild_error3()));
-					$this->logger->emergency($this->language->translate(KnownTranslationFactory::pocketmine_server_devBuild_error4(Yml::SETTINGS_ENABLE_DEV_BUILDS)));
-					$this->logger->emergency($this->language->translate(KnownTranslationFactory::pocketmine_server_devBuild_error5(VersionInfo::GITHUB_URL . "/releases")));
-					$this->forceShutdownExit();
-
-					return;
-				}
-
-				$this->logger->warning(str_repeat("-", 40));
-				$this->logger->warning($this->language->translate(KnownTranslationFactory::pocketmine_server_devBuild_warning1(VersionInfo::NAME)));
-				$this->logger->warning($this->language->translate(KnownTranslationFactory::pocketmine_server_devBuild_warning2()));
-				$this->logger->warning($this->language->translate(KnownTranslationFactory::pocketmine_server_devBuild_warning3()));
-				$this->logger->warning(str_repeat("-", 40));
-			}
-
 			$this->memoryManager = new MemoryManager($this);
 
 			$this->logger->info($this->language->translate(KnownTranslationFactory::pocketmine_server_start(TextFormat::AQUA . $this->getVersion() . TextFormat::RESET)));
@@ -976,15 +957,6 @@ class Server{
 
 			$this->maxPlayers = $this->configGroup->getConfigInt(ServerProperties::MAX_PLAYERS, self::DEFAULT_MAX_PLAYERS);
 
-			$this->onlineMode = $this->configGroup->getConfigBool(ServerProperties::XBOX_AUTH, true);
-			if($this->onlineMode){
-				$this->logger->info($this->language->translate(KnownTranslationFactory::pocketmine_server_auth_enabled()));
-			}else{
-				$this->logger->warning($this->language->translate(KnownTranslationFactory::pocketmine_server_auth_disabled()));
-				$this->logger->warning($this->language->translate(KnownTranslationFactory::pocketmine_server_authWarning()));
-				$this->logger->warning($this->language->translate(KnownTranslationFactory::pocketmine_server_authProperty_disabled()));
-			}
-
 			$this->authKeyProvider = new AuthKeyProvider(new \PrefixedLogger($this->logger, "Minecraft Auth Key Provider"), $this->asyncPool);
 
 			if($this->configGroup->getConfigBool(ServerProperties::HARDCORE, false) && $this->getDifficulty() < World::DIFFICULTY_HARD){
@@ -1033,7 +1005,8 @@ class Server{
 			}
 			$this->pluginManager = new PluginManager($this, $this->configGroup->getPropertyBool(Yml::PLUGINS_LEGACY_DATA_DIR, true) ? null : Path::join($this->dataPath, "plugin_data"), $pluginGraylist);
 			$this->pluginManager->registerInterface(new PharPluginLoader($this->autoloader));
-			$this->pluginManager->registerInterface(new FolderPluginLoader($this->autoloader));
+			$this->pluginManager->registerInterface(new FolderPluginLoader
+			($this->autoloader));
 			$this->pluginManager->registerInterface(new ScriptPluginLoader());
 
 			$providerManager = new WorldProviderManager();
@@ -1485,6 +1458,16 @@ class Server{
 		if($this->isRunning){
 			$this->isRunning = false;
 			$this->signalHandler->unregister();
+
+			if(TimingsHandler::isEnabled()){
+				TimingsHandler::createReportFile(Path::join($this->getDataPath(), "timings"))->onCompletion(
+					function(string $timingsFile) : void{
+						$this->logger->info($this->language->translate(KnownTranslationFactory::pocketmine_command_timings_timingsWrite($timingsFile)));
+						TimingsHandler::setEnabled(false);
+					},
+					fn() => $this->logger->error("Failed to create timings report file")
+				);
+			}
 		}
 	}
 

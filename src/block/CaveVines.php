@@ -26,6 +26,7 @@ namespace pocketmine\block;
 use pocketmine\block\utils\Ageable;
 use pocketmine\block\utils\AgeableTrait;
 use pocketmine\block\utils\BlockEventHelper;
+use pocketmine\block\utils\BlockSupportRegistry;
 use pocketmine\block\utils\StaticSupportTrait;
 use pocketmine\block\utils\SupportType;
 use pocketmine\data\runtime\RuntimeDataDescriber;
@@ -80,8 +81,7 @@ class CaveVines extends Flowable implements Ageable{
 	}
 
 	private function canBeSupportedAt(Block $block) : bool{
-		$supportBlock = $block->getSide(Facing::UP);
-		return $supportBlock->getSupportType(Facing::DOWN) === SupportType::FULL || $supportBlock->hasSameTypeId($this);
+		return BlockSupportRegistry::getInstance()->isTypeSupported($this, $block);
 	}
 
 	public function place(BlockTransaction $tx, Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, ?Player $player = null) : bool{

@@ -25,10 +25,10 @@ namespace pocketmine\block;
 
 use pocketmine\block\utils\AnalogRedstoneSignalEmitter;
 use pocketmine\block\utils\AnalogRedstoneSignalEmitterTrait;
+use pocketmine\block\utils\BlockSupportRegistry;
 use pocketmine\block\utils\StaticSupportTrait;
 use pocketmine\item\Item;
 use pocketmine\item\VanillaItems;
-use pocketmine\math\Facing;
 
 class RedstoneWire extends Flowable implements AnalogRedstoneSignalEmitter{
 	use AnalogRedstoneSignalEmitterTrait;
@@ -42,7 +42,7 @@ class RedstoneWire extends Flowable implements AnalogRedstoneSignalEmitter{
 	}
 
 	private function canBeSupportedAt(Block $block) : bool{
-		return $block->getAdjacentSupportType(Facing::DOWN)->hasCenterSupport();
+		return BlockSupportRegistry::getInstance()->isTypeSupported($this, $block);
 	}
 
 	public function asItem() : Item{
